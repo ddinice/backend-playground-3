@@ -1,0 +1,81 @@
+# DataLoader
+query OrdersWithDataLoader {
+  orders(pagination: { limit: 5 }) {
+    totalCount
+    pageInfo { hasNextPage hasPreviousPage }
+    nodes {
+      id
+      status
+      createdAt
+      items {
+        quantity
+        priceAtPurchase
+        product {
+          id
+          title
+          price
+        }
+      }
+    }
+  }
+}
+
+# N+1
+query OrdersNaiveN1 {
+  ordersNaive(pagination: { limit: 5 }) {
+    totalCount
+    pageInfo { hasNextPage hasPreviousPage }
+    nodes {
+      id
+      status
+      createdAt
+      items {
+        quantity
+        priceAtPurchase
+        product {
+          id
+          title
+          price
+        }
+      }
+    }
+  }
+}
+
+# Compare - run both and see logs
+query OrdersFiltered($filter: OrdersFilterInput, $pagination: OrdersPaginationInput) {
+  orders(filter: $filter, pagination: $pagination) {
+    totalCount
+    nodes {
+      id
+      status
+      createdAt
+      items {
+        quantity
+        product { id title price }
+      }
+    }
+  }
+}
+
+#  Mutation — create order
+mutation CreateOrder {
+  createOrder(input: {
+    userId: "945e6985-86b8-49fa-85f2-501f340aed83"
+    idempotencyKey: "unique-key-123"
+    items: [
+      { productId: "6ea6417c-748b-41ad-8474-6b9eb2f78113", quantity: 1 }
+    ]
+  }) {
+    id
+    status
+    createdAt
+    userId
+    items {
+      id
+      quantity
+      priceAtPurchase
+      product { id title price }
+    }
+  }
+}
