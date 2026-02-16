@@ -39,3 +39,27 @@ query: SELECT "Product"."id" AS "Product_id",
        WHERE (("Product"."id" = $1))
        LIMIT 1
 -- PARAMETERS: ["6ea6417c-748b-41ad-8474-6b9eb2f78113"]
+```
+
+This query is executed **once per each order item**, causing N+1 problem.
+
+---
+
+### After DataLoader (`orders` query)
+
+```bash
+[Nest] 56375  - 12.02.2026, 21:50:12     LOG [OrdersService] Found 3 orders (total: 3)
+
+query: SELECT "Product"."id" AS "Product_id",
+              "Product"."title" AS "Product_title",
+              "Product"."price" AS "Product_price",
+              "Product"."is_active" AS "Product_is_active",
+              "Product"."stock" AS "Product_stock",
+              "Product"."created_at" AS "Product_created_at",
+              "Product"."updated_at" AS "Product_updated_at"
+       FROM "products" "Product"
+       WHERE (("Product"."id" IN ($1, $2, $3, $4)))
+-- PARAMETERS: ["6ea6417c-...", "a1b2c3d4-...", "f5e6d7c8-...", "12345678-..."]
+```
+
+With DataLoader, all product IDs are **batched into a single `IN(...)` query** instead of N separate queries.
